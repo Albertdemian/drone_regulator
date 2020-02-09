@@ -5,6 +5,7 @@ import mavros
 from geometry_msgs.msg import PoseStamped, AccelWithCovarianceStamped, TwistStamped
 from mavros_msgs.msg import State
 from mavros_msgs.srv import CommandBool, SetMode
+from tf import transformations
 
 
 
@@ -79,7 +80,7 @@ def position_control():
     # controller parameters 
     Kp = 1.25
     Kd = 15
-    Kp_r = 5
+    Kp_r = 1.4
 
     #to store error values of step(i-1)
     old_error_x = 0
@@ -132,17 +133,41 @@ def position_control():
             error_y = drone_goal_y - drone_pose_y 
             error_z = drone_goal_z - drone_pose_z 
 
-            error_rz = drone_goal_rz - drone_pose_rz 
-            
+            #converting from Quanternion to euler angles 
+            drone_pose_quan = (
+                drone_pose.pose.orientation.x,
+                drone_pose.pose.orientation.y,
+                drone_pose.pose.orientation.z,
+                drone_pose.pose.orientation.w
+            )
+
+            drone_goal_quan = (
+                drone_goal.pose.orientation.x,
+                drone_goal.pose.orientation.y,
+                drone_goal.pose.orientation.z,
+                drone_goal.pose.orientation.w
+            )
+
+            drone_pose_eul = transformations.euler_from_quaternion(drone_pose_quan)
+            drone_goal_eul = transformations.euler_from_quaternion(drone_goal_quan)
+            print(drone_pose_eul)
+
+            error_rz = drone_goal_eul[2] - drone_pose_eul[2] 
+
             #controller output for velocity
             velocity.twist.linear.x =  (error_x*Kp) + ((old_error_x-error_x)/h * Kd)
             velocity.twist.linear.y =  (error_y*Kp) + ((old_error_y-error_y)/h * Kd)
             velocity.twist.linear.z =  (error_z*Kp) + ((old_error_z-error_z)/h * Kd)
 
+            velocity_out_rz = (error_rz*Kp_r) + ((old_error_rz-error_rz)/h * Kd)
+            
+            
+
             velocity.twist.angular.x = 0
             velocity.twist.angular.y = 0
-            velocity.twist.angular.z= (error_rz*Kp_r) + ((old_error_rz-error_rz)/h * Kd)
-
+            velocity.twist.angular.z = velocity_out_rz
+            
+            
             #position setpoint 
             pose.pose.position.x = drone_goal_x
             pose.pose.position.y = drone_goal_y 
@@ -164,6 +189,13 @@ def position_control():
                 velocity.twist.linear.y = 1.5
             elif (velocity.twist.linear.y < -1.5):
                 velocity.twist.linear.y = -1.5
+
+            if (velocity.twist.angular.z > 1):
+                velocity.twist.angular.z = 1
+            elif(velocity.twist.angular.z <-1):
+                velocity.twist.angular.z = -1
+
+            print(velocity)
 
             old_error_x = error_x
             old_error_y = error_y
