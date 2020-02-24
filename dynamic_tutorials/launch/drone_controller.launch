@@ -1,0 +1,14 @@
+<?xml version="1.0?>
+<launch>
+
+    <include file="$(find ground_control)/launch/ground_control.launch">
+	</include>
+
+    <node name="Twist" pkg="dynamic_tutorials" type="server.py" output="screen" /> 
+    </node>
+
+    <node name="Field" pkg="dynamic_tutorials" type="tune_server.py" output="screen" />
+    </node>
+
+
+</launch>
