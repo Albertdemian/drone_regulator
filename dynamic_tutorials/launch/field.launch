@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+
+    <node name="field" pkg="dynamic_tutorials" type="field.py" output="screen" />
+
+</launch>

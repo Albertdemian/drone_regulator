@@ -57,6 +57,11 @@ def Twist_call(config):
     Twister = config
     print(Twister.doubles[0])
 
+Field = TwistStamped()
+def field_stat(vel_rep):
+    global Field
+    Field = vel_rep
+
 
 #publishers 
 local_pos_pub = rospy.Publisher(mavros.get_topic('setpoint_position', 'local'), PoseStamped, queue_size=10)
@@ -71,6 +76,7 @@ curr_vel_sub = rospy.Subscriber(mavros.get_topic('local_position', 'velocity_loc
 goal_sub = rospy.Subscriber("/goal", PoseStamped, goal)
 Tuner_sub = rospy.Subscriber("/Tuner/parameter_updates", Config, Tuner_call)
 Twist_sub = rospy.Subscriber("/Twist/parameter_updates", Config, Twist_call)
+field_sub = rospy.Subscriber("/field", TwistStamped, field_stat)
 
 #clients 
 #client = dynamic_reconfigure.client.Client("dynamic_tutorials", timeout=30, config_callback=client_call)
@@ -181,11 +187,11 @@ def position_control():
             error_rz = drone_goal_eul[2] - drone_pose_eul[2] 
 
             #controller output for velocity
-            velocity.twist.linear.x =  (error_x*Kp) + ((old_error_x-error_x)/h * Kd) + Twister.doubles[0].value
-            velocity.twist.linear.y =  (error_y*Kp) + ((old_error_y-error_y)/h * Kd) + Twister.doubles[1].value
-            velocity.twist.linear.z =  (error_z*Kp) + ((old_error_z-error_z)/h * Kd) + Twister.doubles[2].value
+            velocity.twist.linear.x =  (error_x*Kp) + ((old_error_x-error_x)/h * Kd) - Field.twist.linear.x
+            velocity.twist.linear.y =  (error_y*Kp) + ((old_error_y-error_y)/h * Kd) - Field.twist.linear.y 
+            velocity.twist.linear.z =  (error_z*Kp) + ((old_error_z-error_z)/h * Kd) - Field.twist.linear.z
 
-            velocity_out_rz = (error_rz*Kp) + ((old_error_rz-error_rz)/h * Kd) + Twister.doubles[3].value
+            velocity_out_rz = (error_rz*Kp) + ((old_error_rz-error_rz)/h * Kd) 
             
             
 
@@ -221,7 +227,7 @@ def position_control():
             elif(velocity.twist.angular.z <-1):
                 velocity.twist.angular.z = -1
 
-            print(Kp, Kd)
+            #print(Kp, Kd)
             #print(Tuner.doubles)
             #print(Twister.doubles)
 
