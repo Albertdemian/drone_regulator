@@ -4,7 +4,7 @@
 
 **to launch dependencies and topics:**
 
-  roslaunch drone_sim forest_sim.launch 
+  >roslaunch drone_sim forest_sim.launch 
   
 **to launch ground control:** 
   roslaunch ground_control ground_control.launch 
