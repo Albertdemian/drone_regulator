@@ -1,11 +1,13 @@
 # drone_regulator
 
-#To launch all nodes: 
+# To launch all nodes: 
 
-to launch dependencies and topics:    
+**to launch dependencies and topics: **
+
   roslaunch drone_sim forest_sim.launch 
   
-to launch ground control:
+**to launch ground control:** 
+
   roslaunch ground_control ground_control.launch 
   
 to launch configuration files and gui:
